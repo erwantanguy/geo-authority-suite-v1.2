@@ -1,6 +1,6 @@
 # GEO Authority Suite
 
-**Version :** 1.4.0  
+**Version :** 1.5.0  
 **Compatibilité :** WordPress 6.0+, PHP 7.4+  
 **Auteur :** Erwan Tanguy - Ticoët  
 **Licence :** GPL2+
