@@ -26,12 +26,44 @@ class GEO_AI_Sitemap {
 
     private function __construct() {
         add_action('init', [$this, 'add_rewrite_rules']);
+        add_action('init', [$this, 'maybe_flush_rules']);
         add_action('template_redirect', [$this, 'maybe_serve_sitemap']);
         add_filter('query_vars', [$this, 'add_query_vars']);
+        
+        // Fallback : détection directe de l'URL sans passer par les rewrite rules
+        add_action('parse_request', [$this, 'detect_sitemap_request']);
     }
 
     public function add_rewrite_rules() {
         add_rewrite_rule('^ai-sitemap\.xml$', 'index.php?geo_ai_sitemap=1', 'top');
+    }
+
+    /**
+     * Vérifie si les rewrite rules sont en place, sinon les ajoute
+     */
+    public function maybe_flush_rules() {
+        $rules = get_option('rewrite_rules');
+        if (!isset($rules['^ai-sitemap\.xml$'])) {
+            $this->add_rewrite_rules();
+            flush_rewrite_rules(false);
+        }
+    }
+
+    /**
+     * Détection directe de /ai-sitemap.xml sans rewrite rules (fallback)
+     */
+    public function detect_sitemap_request($wp) {
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+        $path = parse_url($request_uri, PHP_URL_PATH);
+        
+        if ($path === '/ai-sitemap.xml' || preg_match('#/ai-sitemap\.xml$#', $path)) {
+            if (!get_option(self::OPTION_ENABLED, true)) {
+                status_header(404);
+                exit;
+            }
+            $this->output_sitemap();
+            exit;
+        }
     }
 
     public function add_query_vars($vars) {

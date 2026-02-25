@@ -276,6 +276,29 @@ function geo_add_organization_entity_properties($schema, $post_id) {
         ];
     }
 
+    // Génération automatique de hasOfferCatalog à partir des Services liés
+    $linked_services = geo_get_services_for_organization($post_id);
+    if (!empty($linked_services)) {
+        $org_name = isset($schema['name']) ? $schema['name'] : get_the_title($post_id);
+        $schema['hasOfferCatalog'] = [
+            '@type' => 'OfferCatalog',
+            'name'  => sprintf(__('Services de %s', 'geo-authority-suite'), $org_name),
+            'itemListElement' => $linked_services,
+        ];
+    }
+
+    // Génération automatique de founder à partir des Person avec rôle fondateur
+    $founders = geo_get_founders_for_organization($post_id);
+    if (!empty($founders)) {
+        $schema['founder'] = count($founders) === 1 ? $founders[0] : $founders;
+    }
+
+    // Génération automatique de employee à partir des Person avec rôle employé
+    $employees = geo_get_employees_for_organization($post_id);
+    if (!empty($employees)) {
+        $schema['employee'] = count($employees) === 1 ? $employees[0] : $employees;
+    }
+
     return $schema;
 }
 
@@ -472,3 +495,170 @@ add_shortcode('entity', function ($atts) {
 
     return $output;
 });
+
+/**
+ * Récupère tous les Services liés à une Organization
+ * Recherche les Services dont le provider pointe vers cette Organization
+ */
+function geo_get_services_for_organization($org_post_id) {
+    $services = [];
+    
+    $service_entities = get_posts([
+        'post_type'      => 'entity',
+        'posts_per_page' => -1,
+        'post_status'    => 'publish',
+        'tax_query'      => [
+            [
+                'taxonomy' => 'entity_type',
+                'field'    => 'name',
+                'terms'    => 'Service',
+            ],
+        ],
+    ]);
+    
+    foreach ($service_entities as $service) {
+        $provider = get_post_meta($service->ID, '_entity_provider', true);
+        
+        $is_linked = false;
+        
+        if ($provider === 'main_organization') {
+            $main_org = geo_get_main_organization_id();
+            if ($main_org == $org_post_id) {
+                $is_linked = true;
+            }
+        } elseif ($provider == $org_post_id) {
+            $is_linked = true;
+        }
+        
+        if ($is_linked) {
+            $service_name = get_the_title($service);
+            $service_id = geo_entity_id('Service', sanitize_title($service_name));
+            $services[] = ['@id' => $service_id];
+        }
+    }
+    
+    return $services;
+}
+
+/**
+ * Récupère l'ID de l'Organization principale (première Organization créée)
+ */
+function geo_get_main_organization_id() {
+    $orgs = get_posts([
+        'post_type'      => 'entity',
+        'posts_per_page' => 1,
+        'post_status'    => 'publish',
+        'orderby'        => 'date',
+        'order'          => 'ASC',
+        'tax_query'      => [
+            [
+                'taxonomy' => 'entity_type',
+                'field'    => 'name',
+                'terms'    => ['Organization', 'LocalBusiness', 'ProfessionalService', 'Restaurant', 'Store'],
+            ],
+        ],
+    ]);
+    
+    return !empty($orgs) ? $orgs[0]->ID : null;
+}
+
+/**
+ * Récupère tous les fondateurs d'une Organization
+ * Recherche les Person dont le rôle est "founder" ou "founder_former" et qui travaillent pour cette Organization
+ */
+function geo_get_founders_for_organization($org_post_id) {
+    $founders = [];
+    
+    $person_entities = get_posts([
+        'post_type'      => 'entity',
+        'posts_per_page' => -1,
+        'post_status'    => 'publish',
+        'tax_query'      => [
+            [
+                'taxonomy' => 'entity_type',
+                'field'    => 'name',
+                'terms'    => 'Person',
+            ],
+        ],
+    ]);
+    
+    foreach ($person_entities as $person) {
+        $org_role = get_post_meta($person->ID, '_entity_org_role', true);
+        
+        if (!in_array($org_role, ['founder', 'founder_former'])) {
+            continue;
+        }
+        
+        $works_for = get_post_meta($person->ID, '_entity_works_for', true);
+        $member_of = get_post_meta($person->ID, '_entity_member_of', true);
+        
+        $is_linked = false;
+        $main_org = geo_get_main_organization_id();
+        
+        if ($works_for === 'main_organization' && $main_org == $org_post_id) {
+            $is_linked = true;
+        } elseif ($works_for == $org_post_id) {
+            $is_linked = true;
+        } elseif ($member_of === 'main_organization' && $main_org == $org_post_id) {
+            $is_linked = true;
+        } elseif ($member_of == $org_post_id) {
+            $is_linked = true;
+        }
+        
+        if ($is_linked) {
+            $person_name = get_the_title($person);
+            $person_id = geo_entity_id('Person', sanitize_title($person_name));
+            $founders[] = ['@id' => $person_id];
+        }
+    }
+    
+    return $founders;
+}
+
+/**
+ * Récupère tous les employés d'une Organization
+ * Recherche les Person dont le rôle est "employee" et qui travaillent pour cette Organization
+ */
+function geo_get_employees_for_organization($org_post_id) {
+    $employees = [];
+    
+    $person_entities = get_posts([
+        'post_type'      => 'entity',
+        'posts_per_page' => -1,
+        'post_status'    => 'publish',
+        'tax_query'      => [
+            [
+                'taxonomy' => 'entity_type',
+                'field'    => 'name',
+                'terms'    => 'Person',
+            ],
+        ],
+    ]);
+    
+    foreach ($person_entities as $person) {
+        $org_role = get_post_meta($person->ID, '_entity_org_role', true);
+        
+        if ($org_role !== 'employee') {
+            continue;
+        }
+        
+        $works_for = get_post_meta($person->ID, '_entity_works_for', true);
+        
+        $is_linked = false;
+        $main_org = geo_get_main_organization_id();
+        
+        if ($works_for === 'main_organization' && $main_org == $org_post_id) {
+            $is_linked = true;
+        } elseif ($works_for == $org_post_id) {
+            $is_linked = true;
+        }
+        
+        if ($is_linked) {
+            $person_name = get_the_title($person);
+            $person_id = geo_entity_id('Person', sanitize_title($person_name));
+            $employees[] = ['@id' => $person_id];
+        }
+    }
+    
+    return $employees;
+}

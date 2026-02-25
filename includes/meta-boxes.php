@@ -111,6 +111,7 @@ function geo_entity_schema_meta_box($post) {
     $email = get_post_meta($post->ID, '_entity_email', true);
     $telephone = get_post_meta($post->ID, '_entity_telephone', true);
     $home_location = get_post_meta($post->ID, '_entity_home_location', true);
+    $org_role = get_post_meta($post->ID, '_entity_org_role', true);
 
     $address_street = get_post_meta($post->ID, '_entity_address_street', true);
     $address_city = get_post_meta($post->ID, '_entity_address_city', true);
@@ -203,6 +204,20 @@ function geo_entity_schema_meta_box($post) {
                            class="regular-text"
                            placeholder="Saumur">
                     <p class="description">Ville de residence / base (homeLocation). Renforce l'ancrage local.</p>
+                </td>
+            </tr>
+
+            <tr>
+                <th><label for="entity_org_role">Role dans l'organisation</label></th>
+                <td>
+                    <select id="entity_org_role" name="entity_org_role" class="regular-text">
+                        <option value="" <?php selected($org_role, ''); ?>>-- Non defini --</option>
+                        <option value="founder" <?php selected($org_role, 'founder'); ?>>Fondateur (actif)</option>
+                        <option value="founder_former" <?php selected($org_role, 'founder_former'); ?>>Fondateur (parti)</option>
+                        <option value="employee" <?php selected($org_role, 'employee'); ?>>Employe</option>
+                        <option value="member" <?php selected($org_role, 'member'); ?>>Membre</option>
+                    </select>
+                    <p class="description">Definit la relation avec l'organisation (genere "founder" dans Organization)</p>
                 </td>
             </tr>
         </table>
@@ -489,6 +504,7 @@ add_action('save_post_entity', function ($post_id) {
         'entity_email'              => 'sanitize_email',
         'entity_telephone'          => 'sanitize_text_field',
         'entity_home_location'      => 'sanitize_text_field',
+        'entity_org_role'           => 'sanitize_text_field',
         'entity_address_street'     => 'sanitize_text_field',
         'entity_address_city'       => 'sanitize_text_field',
         'entity_address_postal'     => 'sanitize_text_field',
