@@ -9,8 +9,6 @@ if (!defined('ABSPATH')) {
 
 function geo_run_entity_audit(): array {
 
-    do_action('wp_head');
-
     $entities = geo_get_entities();
     $count = count($entities);
 
