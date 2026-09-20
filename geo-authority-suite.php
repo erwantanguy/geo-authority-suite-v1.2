@@ -2,7 +2,7 @@
 /**
  * Plugin Name: GEO Authority Suite
  * Description: Suite complète pour le GEO (Generative Engine Optimization) - Gestion des entités Schema.org, JSON-LD, llms.txt, indexation IA et audits de contenu.
- * Version: 1.6.1
+ * Version: 1.7.0
  * Author: Erwan Tanguy - Ticoët
  * Author URI: https://www.ticoet.fr/
  * License: GPL2+
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('GEO_AUTHORITY_VERSION', '1.6.1');
+define('GEO_AUTHORITY_VERSION', '1.7.0');
 define('GEO_AUTHORITY_PATH', plugin_dir_path(__FILE__));
 define('GEO_AUTHORITY_URL', plugin_dir_url(__FILE__));
 
@@ -42,6 +42,8 @@ require_once GEO_AUTHORITY_PATH . 'includes/ai-sitemap.php';
 require_once GEO_AUTHORITY_PATH . 'includes/admin-ai-indexing-page.php';
 require_once GEO_AUTHORITY_PATH . 'includes/meta-boxes.php';
 require_once GEO_AUTHORITY_PATH . 'includes/llms-generator.php';
+require_once GEO_AUTHORITY_PATH . 'includes/ymyl-schema.php';
+require_once GEO_AUTHORITY_PATH . 'includes/content-duplicates.php';
 
 register_activation_hook(__FILE__, function () {
     do_action('init');

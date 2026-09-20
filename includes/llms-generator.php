@@ -7,6 +7,68 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * Extrait une reponse directe d'un contenu GEO Blocks Suite.
+ *
+ * Priorite : bloc Reponse directe (answer-geo) > bloc TL;DR (tldr-geo).
+ * Retourne une phrase courte et factuelle exploitable par les IA.
+ *
+ * @param WP_Post $post Contenu.
+ * @return string Reponse directe (vide si aucune).
+ */
+function geo_extract_direct_answer($post): string {
+    $content = $post->post_content;
+
+    if (empty($content)) {
+        return '';
+    }
+
+    // 1. Bloc Reponse directe GEO (answer-geo)
+    if (preg_match_all('/wp:geo-blocks\/answer-geo\b(.*?)wp:geo-blocks\/answer-geo\b/s', $content, $matches)) {
+        foreach ($matches[1] as $block_markup) {
+            $answer = '';
+            if (preg_match('/"answer"\s*:\s*"((?:[^"\\\\]|\\\\.)*)"/s', $block_markup, $attr)) {
+                $answer = json_decode('"' . $attr[1] . '"') ?: '';
+            } elseif (preg_match('/<p[^>]*class="[^"]*geo-answer-text[^"]*"[^>]*>(.*?)<\/p>/s', $block_markup, $html)) {
+                $answer = wp_strip_all_tags($html[1]);
+            }
+
+            $answer = trim(preg_replace('/\s+/', ' ', (string) $answer));
+            if (!empty($answer)) {
+                return mb_substr($answer, 0, 300, 'UTF-8');
+            }
+        }
+    }
+
+    // 2. Bloc TL;DR GEO (tldr-geo)
+    if (preg_match('/wp:geo-blocks\/tldr-geo\b(.*?)wp:geo-blocks\/tldr-geo\b/s', $content, $match)) {
+        $summary = '';
+        if (preg_match('/"summary"\s*:\s*"((?:[^"\\\\]|\\\\.)*)"/s', $match[1], $attr)) {
+            $summary = json_decode('"' . $attr[1] . '"') ?: '';
+        } elseif (preg_match('/<p[^>]*class="[^"]*geo-tldr[^"]*"[^>]*>(.*?)<\/p>/s', $match[1], $html)) {
+            $summary = wp_strip_all_tags($html[1]);
+        }
+
+        $summary = trim(preg_replace('/\s+/', ' ', (string) $summary));
+        if (!empty($summary)) {
+            return mb_substr($summary, 0, 300, 'UTF-8');
+        }
+    }
+
+    // 3. Fallback : premier paragraphe riche (h2, blockquote ou definition GEO)
+    if (preg_match('/wp:geo-blocks\/definition-geo\b(.*?)wp:geo-blocks\/definition-geo\b/s', $content, $match)) {
+        if (preg_match('/"definition"\s*:\s*"((?:[^"\\\\]|\\\\.)*)"/s', $match[1], $attr)) {
+            $definition = json_decode('"' . $attr[1] . '"') ?: '';
+            $definition = trim(preg_replace('/\s+/', ' ', (string) $definition));
+            if (!empty($definition)) {
+                return mb_substr($definition, 0, 300, 'UTF-8');
+            }
+        }
+    }
+
+    return '';
+}
+
 function geo_generate_llms_content(): string {
 
     $site_name = get_bloginfo('name');
