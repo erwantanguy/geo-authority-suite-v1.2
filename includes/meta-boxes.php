@@ -358,9 +358,9 @@ function geo_entity_schema_meta_box($post) {
         </table>
         <?php endif; ?>
 
-        <?php 
+        <?php
         $area_served_types = ['Organization', 'LocalBusiness', 'ProfessionalService', 'Restaurant', 'Store', 'Service'];
-        if (in_array($current_type, $area_served_types)): 
+        if (in_array($current_type, $area_served_types)):
             $area_served_scope = get_post_meta($post->ID, '_entity_area_served_scope', true);
             $area_served_name = get_post_meta($post->ID, '_entity_area_served_name', true);
         ?>
@@ -395,6 +395,156 @@ function geo_entity_schema_meta_box($post) {
         </table>
         <?php endif; ?>
 
+        <?php
+        if (geo_is_creative_work_type($current_type)):
+            $cw_about          = get_post_meta($post->ID, '_entity_cw_about', true);
+            $cw_headline       = get_post_meta($post->ID, '_entity_cw_headline', true);
+            $cw_date_published = get_post_meta($post->ID, '_entity_cw_date_published', true);
+            $cw_date_modified  = get_post_meta($post->ID, '_entity_cw_date_modified', true);
+            $cw_language       = get_post_meta($post->ID, '_entity_cw_language', true);
+            $cw_license        = get_post_meta($post->ID, '_entity_cw_license', true);
+            $cw_keywords       = get_post_meta($post->ID, '_entity_cw_keywords', true);
+            $cw_free           = get_post_meta($post->ID, '_entity_cw_free', true);
+            $cw_encoding       = get_post_meta($post->ID, '_entity_cw_encoding', true);
+            $cw_thumbnail      = get_post_meta($post->ID, '_entity_cw_thumbnail', true);
+        ?>
+        <h4>Proprietes CreativeWork</h4>
+        <p class="description" style="margin-bottom: 10px;">
+            Conforme a la documentation officielle
+            <a href="https://schema.org/CreativeWork" target="_blank" rel="noopener noreferrer">schema.org/CreativeWork</a>.
+        </p>
+        <table class="form-table">
+            <?php if ($current_type === 'Article'): ?>
+            <tr>
+                <th><label for="entity_cw_headline">Titre (headline)</label></th>
+                <td>
+                    <input type="text"
+                           id="entity_cw_headline"
+                           name="entity_cw_headline"
+                           value="<?php echo esc_attr($cw_headline); ?>"
+                           class="regular-text"
+                           placeholder="Titre de l'article (110 caracteres max recommande)">
+                    <p class="description">Specifique au type Article</p>
+                </td>
+            </tr>
+            <?php endif; ?>
+
+            <tr>
+                <th><label for="entity_cw_about">Sujet (about)</label></th>
+                <td>
+                    <input type="text"
+                           id="entity_cw_about"
+                           name="entity_cw_about"
+                           value="<?php echo esc_attr($cw_about); ?>"
+                           class="regular-text"
+                           placeholder="Ex : Karting indoor, SEO local...">
+                    <p class="description">Le sujet principal de l'oeuvre (genere un Thing nomme)</p>
+                </td>
+            </tr>
+
+            <tr>
+                <th><label for="entity_cw_date_published">Date de publication</label></th>
+                <td>
+                    <input type="date"
+                           id="entity_cw_date_published"
+                           name="entity_cw_date_published"
+                           value="<?php echo esc_attr($cw_date_published); ?>">
+                    <p class="description">datePublished</p>
+                </td>
+            </tr>
+
+            <tr>
+                <th><label for="entity_cw_date_modified">Date de mise a jour</label></th>
+                <td>
+                    <input type="date"
+                           id="entity_cw_date_modified"
+                           name="entity_cw_date_modified"
+                           value="<?php echo esc_attr($cw_date_modified); ?>">
+                    <p class="description">dateModified - renforce la fraicheur (EEAT)</p>
+                </td>
+            </tr>
+
+            <tr>
+                <th><label for="entity_cw_language">Langue</label></th>
+                <td>
+                    <input type="text"
+                           id="entity_cw_language"
+                           name="entity_cw_language"
+                           value="<?php echo esc_attr($cw_language ?: 'fr-FR'); ?>"
+                           class="regular-text"
+                           placeholder="fr-FR">
+                    <p class="description">inLanguage (code BCP 47)</p>
+                </td>
+            </tr>
+
+            <tr>
+                <th><label for="entity_cw_license">Licence</label></th>
+                <td>
+                    <input type="url"
+                           id="entity_cw_license"
+                           name="entity_cw_license"
+                           value="<?php echo esc_url($cw_license); ?>"
+                           class="regular-text"
+                           placeholder="https://creativecommons.org/licenses/by-sa/4.0/">
+                    <p class="description">URL de la licence du contenu</p>
+                </td>
+            </tr>
+
+            <tr>
+                <th><label for="entity_cw_keywords">Mots-cles</label></th>
+                <td>
+                    <input type="text"
+                           id="entity_cw_keywords"
+                           name="entity_cw_keywords"
+                           value="<?php echo esc_attr($cw_keywords); ?>"
+                           class="regular-text"
+                           placeholder="karting, rennes, bretagne">
+                    <p class="description">Separes par des virgules</p>
+                </td>
+            </tr>
+
+            <tr>
+                <th>Acces gratuit</th>
+                <td>
+                    <label>
+                        <input type="checkbox"
+                               name="entity_cw_free"
+                               value="1"
+                               <?php checked($cw_free, '1'); ?>>
+                        Contenu accessible gratuitement (isAccessibleForFree)
+                    </label>
+                    <p class="description">Important pour les IA : indique que le contenu peut etre cite librement</p>
+                </td>
+            </tr>
+
+            <tr>
+                <th><label for="entity_cw_encoding">Media associe (encoding)</label></th>
+                <td>
+                    <input type="url"
+                           id="entity_cw_encoding"
+                           name="entity_cw_encoding"
+                           value="<?php echo esc_url($cw_encoding); ?>"
+                           class="regular-text"
+                           placeholder="https://example.com/video.mp4">
+                    <p class="description">URL du media associe (video, audio, PDF...)</p>
+                </td>
+            </tr>
+
+            <tr>
+                <th><label for="entity_cw_thumbnail">Miniature (thumbnailUrl)</label></th>
+                <td>
+                    <input type="url"
+                           id="entity_cw_thumbnail"
+                           name="entity_cw_thumbnail"
+                           value="<?php echo esc_url($cw_thumbnail); ?>"
+                           class="regular-text"
+                           placeholder="https://example.com/miniature.jpg">
+                    <p class="description">Utile pour VideoObject et Article</p>
+                </td>
+            </tr>
+        </table>
+        <?php endif; ?>
+
     </div>
 
     <?php
@@ -405,6 +555,9 @@ function geo_entity_relations_meta_box($post) {
     $works_for = get_post_meta($post->ID, '_entity_works_for', true);
     $member_of = get_post_meta($post->ID, '_entity_member_of', true);
     $provider = get_post_meta($post->ID, '_entity_provider', true);
+    $cw_author = get_post_meta($post->ID, '_entity_cw_author', true);
+    $cw_creator = get_post_meta($post->ID, '_entity_cw_creator', true);
+    $cw_publisher = get_post_meta($post->ID, '_entity_cw_publisher', true);
 
     $types = wp_get_post_terms($post->ID, 'entity_type');
     $current_type = $types && !is_wp_error($types) ? $types[0]->name : '';
@@ -417,6 +570,18 @@ function geo_entity_relations_meta_box($post) {
                 'taxonomy' => 'entity_type',
                 'field'    => 'name',
                 'terms'    => ['Organization', 'LocalBusiness'],
+            ],
+        ],
+    ]);
+
+    $persons = get_posts([
+        'post_type'      => 'entity',
+        'posts_per_page' => -1,
+        'tax_query'      => [
+            [
+                'taxonomy' => 'entity_type',
+                'field'    => 'name',
+                'terms'    => ['Person'],
             ],
         ],
     ]);
@@ -440,6 +605,50 @@ function geo_entity_relations_meta_box($post) {
             <?php endforeach; ?>
         </select>
         <span class="description">L'organisation qui fournit ce service (ferme le graphe semantique)</span>
+    </p>
+    <?php endif; ?>
+
+    <?php if (geo_is_creative_work_type($current_type)): ?>
+    <p>
+        <label for="entity_cw_author"><strong>Auteur (author)</strong></label><br>
+        <select id="entity_cw_author" name="entity_cw_author" style="width: 100%;">
+            <option value="">-- Aucun --</option>
+            <?php foreach ($persons as $person): ?>
+                <option value="<?php echo $person->ID; ?>" <?php selected($cw_author, $person->ID); ?>>
+                    <?php echo esc_html($person->post_title); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <span class="description">L'entite Person auteure de l'oeuvre (renforce l'EEAT)</span>
+    </p>
+
+    <p>
+        <label for="entity_cw_creator"><strong>Createur (creator)</strong></label><br>
+        <select id="entity_cw_creator" name="entity_cw_creator" style="width: 100%;">
+            <option value="">-- Aucun --</option>
+            <?php foreach (array_merge($persons, $organizations) as $creator_entity): ?>
+                <option value="<?php echo $creator_entity->ID; ?>" <?php selected($cw_creator, $creator_entity->ID); ?>>
+                    <?php echo esc_html($creator_entity->post_title); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <span class="description">Createur alternatif (Person ou Organization)</span>
+    </p>
+
+    <p>
+        <label for="entity_cw_publisher"><strong>Editeur (publisher)</strong></label><br>
+        <select id="entity_cw_publisher" name="entity_cw_publisher" style="width: 100%;">
+            <option value="">-- Aucun --</option>
+            <option value="main_organization" <?php selected($cw_publisher, 'main_organization'); ?>>
+                <?php echo esc_html($site_name); ?> (Organization principale)
+            </option>
+            <?php foreach ($organizations as $org): ?>
+                <option value="<?php echo $org->ID; ?>" <?php selected($cw_publisher, $org->ID); ?>>
+                    <?php echo esc_html($org->post_title); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <span class="description">L'organisation qui edite l'oeuvre</span>
     </p>
     <?php endif; ?>
 
@@ -518,6 +727,18 @@ add_action('save_post_entity', function ($post_id) {
         'entity_works_for'          => 'sanitize_text_field',
         'entity_member_of'          => 'sanitize_text_field',
         'entity_provider'           => 'sanitize_text_field',
+        'entity_cw_author'          => 'sanitize_text_field',
+        'entity_cw_creator'         => 'sanitize_text_field',
+        'entity_cw_publisher'       => 'sanitize_text_field',
+        'entity_cw_about'           => 'sanitize_text_field',
+        'entity_cw_headline'        => 'sanitize_text_field',
+        'entity_cw_date_published'  => 'sanitize_text_field',
+        'entity_cw_date_modified'   => 'sanitize_text_field',
+        'entity_cw_language'        => 'sanitize_text_field',
+        'entity_cw_license'         => 'esc_url_raw',
+        'entity_cw_keywords'        => 'sanitize_text_field',
+        'entity_cw_encoding'        => 'esc_url_raw',
+        'entity_cw_thumbnail'       => 'esc_url_raw',
     ];
 
     foreach ($fields as $field => $sanitize_function) {
@@ -525,6 +746,13 @@ add_action('save_post_entity', function ($post_id) {
             $value = call_user_func($sanitize_function, $_POST[$field]);
             update_post_meta($post_id, '_' . $field, $value);
         }
+    }
+
+    // Checkbox isAccessibleForFree (absent du POST si decochee)
+    if (isset($_POST['entity_cw_free']) && $_POST['entity_cw_free'] === '1') {
+        update_post_meta($post_id, '_entity_cw_free', '1');
+    } else {
+        delete_post_meta($post_id, '_entity_cw_free');
     }
 
 });

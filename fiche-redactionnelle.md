@@ -6,7 +6,7 @@
 
 ## Téléchargement
 
-- **Version actuelle :** 1.6.1
+- **Version actuelle :** 1.8.0
 - **Fichier ZIP :** [https://dl.ticoet.me/downloads/pluginsWP/geo-authority-suite/geo-authority-suite.zip](https://dl.ticoet.me/downloads/pluginsWP/geo-authority-suite/geo-authority-suite.zip)
 - **Mise à jour :** automatique via le tableau de bord WordPress (plugin-update-checker)
 
@@ -16,7 +16,7 @@
 
 **GEO Authority Suite** est un plugin WordPress qui transforme votre site en une base de connaissances structurée pour les moteurs de recherche et les IA génératives.
 
-Il permet de créer, organiser et relier des **entités Schema.org** (Organization, Person, LocalBusiness, Service, Product, Place, etc.) et de générer automatiquement le JSON-LD correspondant dans le `<head>` de chaque page.
+Il permet de créer, organiser et relier des **entités Schema.org** (Organization, Person, LocalBusiness, Service, Product, Place, CreativeWork, Article, Book, VideoObject, Course, SoftwareApplication, etc.) et de générer automatiquement le JSON-LD correspondant dans le `<head>` de chaque page.
 
 L’objectif : améliorer la **compréhension sémantique** du site, renforcer l’**E-E-A-T** et maximiser les chances d’être cité ou affiché par Google, ChatGPT, Claude, Perplexity et autres assistants.
 

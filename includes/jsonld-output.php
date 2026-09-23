@@ -108,6 +108,160 @@ function geo_build_entity_schema($entity) {
         case 'Service':
             $schema = geo_add_service_entity_properties($schema, $post_id);
             break;
+
+        case 'CreativeWork':
+        case 'Article':
+        case 'Book':
+        case 'VideoObject':
+        case 'Course':
+        case 'SoftwareApplication':
+            $schema = geo_add_creativework_entity_properties($schema, $post_id);
+            break;
+    }
+
+    return $schema;
+}
+
+/**
+ * Determine si un type est un CreativeWork ou un de ses sous-types.
+ *
+ * @param string $type Type Schema.org.
+ * @return bool
+ */
+function geo_is_creative_work_type(string $type): bool {
+    return in_array($type, ['CreativeWork', 'Article', 'Book', 'VideoObject', 'Course', 'SoftwareApplication'], true);
+}
+
+/**
+ * Proprietes specifiques aux entites CreativeWork et sous-types.
+ *
+ * Proprietes conformes a la documentation officielle schema.org :
+ * https://schema.org/CreativeWork
+ *
+ * @param array $schema  Schema en construction.
+ * @param int   $post_id ID de l'entite.
+ * @return array
+ */
+function geo_add_creativework_entity_properties($schema, $post_id) {
+
+    // author : liaison vers une entite Person (EEAT)
+    $author = get_post_meta($post_id, '_entity_cw_author', true);
+    if (!empty($author)) {
+        $person_post = get_post($author);
+        if ($person_post && $person_post->post_type === 'entity') {
+            $p_name = get_post_meta($person_post->ID, '_entity_canonical', true);
+            if (empty($p_name)) {
+                $p_name = get_the_title($person_post);
+            }
+            $schema['author'] = [
+                '@id' => geo_entity_id('Person', sanitize_title($p_name)),
+            ];
+        }
+    }
+
+    // creator : alternative a author (Person ou Organization)
+    $creator = get_post_meta($post_id, '_entity_cw_creator', true);
+    if (!empty($creator)) {
+        $creator_post = get_post($creator);
+        if ($creator_post && $creator_post->post_type === 'entity') {
+            $c_types = wp_get_post_terms($creator_post->ID, 'entity_type');
+            $c_type = $c_types && !is_wp_error($c_types) ? $c_types[0]->name : 'Person';
+            $c_name = get_post_meta($creator_post->ID, '_entity_canonical', true);
+            if (empty($c_name)) {
+                $c_name = get_the_title($creator_post);
+            }
+            $schema['creator'] = [
+                '@id' => geo_entity_id($c_type, sanitize_title($c_name)),
+            ];
+        }
+    }
+
+    // publisher : liaison vers une entite Organization
+    $publisher = get_post_meta($post_id, '_entity_cw_publisher', true);
+    if (!empty($publisher)) {
+        if ($publisher === 'main_organization') {
+            $schema['publisher'] = [
+                '@id' => geo_entity_id('organization'),
+            ];
+        } else {
+            $org_post = get_post($publisher);
+            if ($org_post && $org_post->post_type === 'entity') {
+                $o_name = get_the_title($org_post);
+                $schema['publisher'] = [
+                    '@id' => geo_entity_id('organization', sanitize_title($o_name)),
+                ];
+            }
+        }
+    }
+
+    // about : sujet de l'oeuvre (Thing nomme)
+    $about = get_post_meta($post_id, '_entity_cw_about', true);
+    if (!empty($about)) {
+        $schema['about'] = [
+            '@type' => 'Thing',
+            'name'  => $about,
+        ];
+    }
+
+    // headline : specifique a Article
+    if (($schema['@type'] ?? '') === 'Article') {
+        $headline = get_post_meta($post_id, '_entity_cw_headline', true);
+        if (!empty($headline)) {
+            $schema['headline'] = $headline;
+        }
+    }
+
+    // datePublished / dateModified : fraicheur (EEAT)
+    $date_published = get_post_meta($post_id, '_entity_cw_date_published', true);
+    if (!empty($date_published)) {
+        $schema['datePublished'] = $date_published;
+    }
+
+    $date_modified = get_post_meta($post_id, '_entity_cw_date_modified', true);
+    if (!empty($date_modified)) {
+        $schema['dateModified'] = $date_modified;
+    }
+
+    // inLanguage
+    $language = get_post_meta($post_id, '_entity_cw_language', true);
+    if (!empty($language)) {
+        $schema['inLanguage'] = $language;
+    }
+
+    // license
+    $license = get_post_meta($post_id, '_entity_cw_license', true);
+    if (!empty($license)) {
+        $schema['license'] = $license;
+    }
+
+    // keywords
+    $keywords = get_post_meta($post_id, '_entity_cw_keywords', true);
+    if (!empty($keywords)) {
+        $kw = array_filter(array_map('trim', explode(',', $keywords)));
+        if (!empty($kw)) {
+            $schema['keywords'] = implode(', ', $kw);
+        }
+    }
+
+    // isAccessibleForFree : important pour les IA
+    $free = get_post_meta($post_id, '_entity_cw_free', true);
+    if ($free === '1') {
+        $schema['isAccessibleForFree'] = true;
+    }
+
+    // encoding : media associe (MediaObject)
+    $encoding = get_post_meta($post_id, '_entity_cw_encoding', true);
+    if (!empty($encoding)) {
+        $schema['encoding'] = [
+            '@type'     => 'MediaObject',
+            'contentUrl' => $encoding,
+        ];
+    }
+
+    // thumbnailUrl : utile pour VideoObject / Article
+    $thumbnail = get_post_meta($post_id, '_entity_cw_thumbnail', true);
+    if (!empty($thumbnail)) {
+        $schema['thumbnailUrl'] = $thumbnail;
     }
 
     return $schema;

@@ -63,6 +63,12 @@ add_action('init', function () {
         'Service',
         'Place',
         'Event',
+        'CreativeWork',
+        'Article',
+        'Book',
+        'VideoObject',
+        'Course',
+        'SoftwareApplication',
     ];
     foreach ($default_types as $type) {
         if (!term_exists($type, 'entity_type')) {
